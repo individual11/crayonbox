@@ -1,0 +1,51 @@
+style "Field Notes" modes=light,dark,dark-hc
+  about "A naturalist's field notebook: warm paper, graphite ink, one moss green for anything you can tap."
+  dont "Gradients on text, glows, or corners rounder than 4px."
+  dont "Weights above 600."
+
+palette
+  paper #F4F0E4
+  ink   #1E1A14
+  moss  #4F7A3A ramp
+  clay  #B8422E ramp
+  stone ramp from=paper to=ink
+
+color
+  background paper      dark=stone-950
+  surface    #FFFFFF    dark=stone-900
+  text       ink        dark=stone-50
+  muted      stone-600  dark=stone-400 dark-hc=stone-200
+  line       stone-300  dark=stone-700
+  primary    moss-700   dark=moss-300 about="Only for things you can tap."
+  danger     clay-600   dark=clay-300
+
+font
+  serif "Source Serif 4" fallback=Georgia,serif
+  mono  "JetBrains Mono" fallback=monospace ios=Menlo
+
+type font=serif ratio=1.25
+  body    16 line=1.6
+  label   font=mono weight=500 upper tracking=0.08
+  display weight=600 tracking=-0.02
+
+space base=4
+
+elevation flat
+  about "Depth comes from tone and hairlines, like paper on a desk."
+
+radius sm=2 md=4 full
+
+motion fast=120ms normal=200ms slow=320ms reduced=fade
+
+component button height=44 pad=0,lg radius=md type=label
+  variant filled fill=primary
+  variant plain  fill=none text=primary line=line
+
+component card elevation=raised radius=md pad=xl
+
+voice
+  about "Plain, warm, a little dry. Say what happened, then what to do."
+  dont "Exclamation marks."
+  do "Links use primary, underlined."
+
+rule contrast=AA

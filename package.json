@@ -1,0 +1,35 @@
+{
+  "name": "crayonbox",
+  "version": "0.0.0",
+  "description": "Style guides in plain text: easy for LLMs to write, checked before they ship.",
+  "keywords": [
+    "design-system",
+    "style-guide",
+    "design-tokens",
+    "dtcg",
+    "design.md",
+    "llm",
+    "ai",
+    "claude"
+  ],
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./package.json": "./package.json"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "check": "tsx src/cli.ts check",
+    "fmt": "tsx src/cli.ts fmt",
+    "typecheck": "tsc",
+    "test": "tsx --test test/*.test.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^24.19.1",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
+  }
+}

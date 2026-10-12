@@ -1,0 +1,17 @@
+# Ignore everything by default; allow only what belongs in the repo.
+# New files stay untracked until they're listed here.
+*
+!*/
+
+!/.gitignore
+!/README.md
+!/CLAUDE.md
+!/ROADMAP.md
+!/LICENSE
+!/package.json
+!/package-lock.json
+!/tsconfig.json
+
+!/src/**/*.ts
+!/test/*.ts
+!/examples/*.crayon
