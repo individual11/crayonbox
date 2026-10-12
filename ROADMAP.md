@@ -11,9 +11,13 @@ Things we agreed to come back to. Decisions themselves go in the language guide'
 - **Licensed fonts in the guide.** v0.1 fetches Google Fonts by name and draws anything else (SF Pro, commercial fonts) with a labeled stand-in. Figure out how to render with fonts the user is licensed for: a local font file passed to `render`? A font URL in the file? What the license allows when the SVG embeds the font.
 - **More checked rules.** v0.1 keeps only rules that check measurable quality in the file: contrast, min-text, touch (agreed 2026-10-11). Taste is guidance (`about=`, `do`, `dont`).
 
-## Open questions for the rendering side
+## Rendering (milestone 2)
 
-- **How to render `do` / `dont` lines.** A section can have any number of each (agreed 2026-10-11). In the SVG guide: two columns per section? A Do/Don't block at the end like DESIGN.md? Paired with a drawn example (a wrong and a right button)? What when there are many, or only dont's?
+- ~~How to render `do` / `dont` lines~~ **Built:** in place, under the section they belong to (style-level ones on the cover), as Do and Don't columns; a column only appears when it has lines. Revisit if a section gets long lists.
+- **Themed guide** (agreed 2026-10-12 as an option, not the default): page tinted with the style's background, section titles in its heading font, small marks in primary; labels stay neutral so specimens keep their edges and a weak style still reads.
+- **Phosphor and Material Symbols** are accepted by the checker but drawn in Lucide with a note. Bundle them (pinned, like lucide) so the guide shows the real set.
+- **Blur** can't be drawn by Satori; materials show the blur as a softened backdrop with a note. A real blur needs an SVG filter after Satori, or a raster pass.
+- **Italic stand-ins:** a style whose font is a stand-in draws upright, because the bundled Inter has no italic face.
 
 ## Outputs (agreed direction, order not final)
 

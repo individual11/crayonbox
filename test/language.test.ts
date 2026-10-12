@@ -112,3 +112,18 @@ test("a component without variants gets the catalog's", () => {
   const r = checkStyle(style("component button height=48"));
   assert.deepEqual(r.style!.components.find((c) => c.name === "button")!.variants.map((v) => v.name), ["filled", "plain"]);
 });
+
+test("guidance keeps its owner, and items keep their about=", () => {
+  const s = checkStyle(
+    style("radius sm=4", '  dont "Mixed corners."', "type", '  body 16 about="Long reads"', "palette", '  moss #4F7A3A about="From the logo"', "component button", '  dont "Two filled side by side."'),
+  ).style!;
+  assert.deepEqual(
+    s.guidance.map((g) => [g.section, g.owner, g.kind]),
+    [
+      ["radius", undefined, "dont"],
+      ["component", "button", "dont"],
+    ],
+  );
+  assert.equal(s.type.find((t) => t.name === "body")!.about, "Long reads");
+  assert.equal(s.palette.find((p) => p.name === "moss")!.about, "From the logo");
+});

@@ -71,9 +71,10 @@ export type TypeStyle = {
   upper: boolean;
   italic: boolean;
   features?: string;
+  about?: string;
 };
 export type Shadow = { x: number; y: number; blur: number; spread: number; color: RGBA };
-export type Level = { name: string; line?: number; from: Provenance; modes: Record<string, { fill?: string; material?: string; shadow: Shadow[]; line?: string; tint: number }> };
+export type Level = { name: string; line?: number; from: Provenance; about?: string; modes: Record<string, { fill?: string; material?: string; shadow: Shadow[]; line?: string; tint: number }> };
 export type Component = {
   name: string;
   line?: number;
@@ -88,24 +89,25 @@ export type Style = {
   name: string;
   modes: string[];
   baseOf: Record<string, string | undefined>;
-  palette: { name: string; line: number; color: RGBA; ramp?: string }[];
+  palette: { name: string; line: number; color: RGBA; ramp?: string; about?: string }[];
   roles: Role[];
-  gradients: { name: string; line: number; kind: "linear" | "radial"; angle: number; stops: string[] }[];
-  fonts: { name: string; line?: number; from: Provenance; family: string; fallback: string[]; platforms: Partial<Record<Platform, string>> }[];
+  gradients: { name: string; line: number; kind: "linear" | "radial"; angle: number; stops: string[]; about?: string }[];
+  fonts: { name: string; line?: number; from: Provenance; family: string; fallback: string[]; platforms: Partial<Record<Platform, string>>; about?: string }[];
   type: TypeStyle[];
   space: Scale;
   radius: Scale;
   border: Scale;
   opacity: Scale;
-  materials: { name: string; line: number; modes: Record<string, { blur: number; fill?: string; line?: string }> }[];
+  materials: { name: string; line: number; about?: string; modes: Record<string, { blur: number; fill?: string; line?: string }> }[];
   elevation: { flat: boolean; levels: Level[] };
   motion: { durations: Record<string, number>; easings: Record<string, [number, number, number, number]>; reduced: string; from: Provenance };
-  layout: { max: number; touch: number; breakpoints: { name: string; min: number; columns: number; gutter: number; margin: number }[]; from: Provenance };
+  layout: { max: number; touch: number; breakpoints: { name: string; min: number; columns: number; gutter: number; margin: number; about?: string }[]; from: Provenance };
   icons: { set: string; stroke: number; sizes: number[]; platforms: Partial<Record<Platform, string>>; from: Provenance };
   states: Record<string, number>;
   focus: { color: string; width: number; offset: number; from: Provenance };
   components: Component[];
-  guidance: { section: SectionKind | "style"; kind: string; text: string; line: number }[];
+  /** about/do/dont lines with the section they sit in and, under a component line, that component. */
+  guidance: { section: SectionKind | "style"; owner?: string; kind: string; text: string; line: number }[];
   rules: { contrast: string; minText: number; touch: number };
 };
 
@@ -204,7 +206,10 @@ class Checker {
       rules: { contrast: RULE_DEFAULTS.contrast, minText: RULE_DEFAULTS.minText, touch: LAYOUT_DEFAULTS.touch },
     };
     for (const g of file.guidance) this.style.guidance.push({ section: "style", kind: g.kind, text: g.text, line: g.line });
-    for (const b of file.blocks) for (const g of b.guidance) this.style.guidance.push({ section: b.kind, kind: g.kind, text: g.text, line: g.line });
+    for (const b of file.blocks) {
+      const owner = b.kind === "component" && b.args[0]?.kind === "word" ? b.args[0].value : undefined;
+      for (const g of b.guidance) this.style.guidance.push({ section: b.kind, owner, kind: g.kind, text: g.text, line: g.line });
+    }
 
     this.readPalette();
     this.readRoles();
@@ -298,7 +303,7 @@ class Checker {
         const b = this.color(out.to, item.line, "", "to");
         if (!a || !b) continue;
         const steps = rampBetween(a, b);
-        this.addRamp(item, steps, `between ${out.from} and ${out.to}`);
+        this.addRamp(item, steps, `between ${out.from} and ${out.to}`, false, out.about);
         continue;
       }
       if (values.length !== 1) {
@@ -308,7 +313,7 @@ class Checker {
       const c = this.color(values[0], item.line, "");
       if (!c) continue;
       if (!this.define({ name: item.name, line: item.line, kind: "palette", fixed: c })) continue;
-      this.style.palette.push({ name: item.name, line: item.line, color: c });
+      this.style.palette.push({ name: item.name, line: item.line, color: c, about: out.about });
       if (isRamp) {
         const { steps, at } = rampAround({ ...c, a: 1 });
         this.addRamp(item, steps, `around ${item.name} at ${STEPS[at]}`, true);
@@ -316,9 +321,9 @@ class Checker {
     }
   }
 
-  private addRamp(item: Item, steps: RGBA[], how: string, baseDefined = false) {
+  private addRamp(item: Item, steps: RGBA[], how: string, baseDefined = false, about?: string) {
     if (!baseDefined && !this.define({ name: item.name, line: item.line, kind: "palette", fixed: steps[5] })) return;
-    if (!baseDefined) this.style.palette.push({ name: item.name, line: item.line, color: steps[5], ramp: how });
+    if (!baseDefined) this.style.palette.push({ name: item.name, line: item.line, color: steps[5], ramp: how, about });
     steps.forEach((c, i) => {
       const name = `${item.name}-${STEPS[i]}`;
       if (this.define({ name, line: item.line, kind: "step", fixed: c })) this.style.palette.push({ name, line: item.line, color: c, ramp: how });
@@ -494,7 +499,7 @@ class Checker {
     if (!block) return;
     for (const item of block.items) {
       if (item.broken) continue;
-      const { words } = this.settings(item.line, item.args, ["about"], "a gradient");
+      const { out: gOut, words } = this.settings(item.line, item.args, ["about"], "a gradient");
       const [kind, ...rest] = words;
       if (kind !== "linear" && kind !== "radial") {
         this.issues.error(item.line, `a gradient is linear or radial, then its stops, as in ${item.name} linear 180 surface,primary/20`);
@@ -516,7 +521,7 @@ class Checker {
         continue;
       }
       if (!stops.every((s) => this.color(s, item.line, this.modes[0]))) continue;
-      if (this.define({ name: item.name, line: item.line, kind: "gradient" })) this.style.gradients.push({ name: item.name, line: item.line, kind, angle, stops });
+      if (this.define({ name: item.name, line: item.line, kind: "gradient" })) this.style.gradients.push({ name: item.name, line: item.line, kind, angle, stops, about: gOut.about });
     }
   }
 
@@ -546,6 +551,7 @@ class Checker {
         family: words[0].slice(1, -1),
         fallback: out.fallback ? out.fallback.split(",") : [],
         platforms,
+        about: out.about,
       });
     }
     if (!this.style.fonts.length) this.style.fonts.push({ ...DEFAULT_FONT, fallback: [...DEFAULT_FONT.fallback], from: "default", platforms: {} });
@@ -648,6 +654,7 @@ class Checker {
         upper: !!w?.upper,
         italic: !!w?.italic,
         features: p.features,
+        about: p.about,
       });
     }
   }
@@ -774,7 +781,7 @@ class Checker {
         modes[m] = { blur: blur ?? 0, fill: props.fill, line: props.line };
       }
       for (const [, v] of Object.entries(perMode)) read(v.line, v.args, "a material's mode line");
-      this.style.materials.push({ name: item.name, line: item.line, modes });
+      this.style.materials.push({ name: item.name, line: item.line, about: base.about, modes });
     }
   }
 
@@ -817,6 +824,8 @@ class Checker {
       const d = LEVEL_DEFAULTS[name];
       const level: Level = { name, line: item?.line, from: item ? "written" : "default", modes: {} };
       const base = item ? this.settings(item.line, item.args, LEVEL_KEYS, "an elevation level") : { out: {} as Record<string, string>, words: [] as string[] };
+      level.about = base.out.about;
+      delete base.out.about;
       if (item && base.words.length) this.issues.error(item.line, `an elevation level takes ${list(LEVEL_KEYS.filter((k) => k !== "about").map((k) => k + "="))}; "${base.words[0]}" isn't one`);
       const perMode = item ? this.modeLines(item) : {};
       for (const [m, v] of Object.entries(perMode)) {
@@ -924,7 +933,7 @@ class Checker {
       const d = BREAKPOINT_DEFAULTS[item.name] ?? BREAKPOINT_DEFAULTS.phone;
       const n = (k: "min" | "columns" | "gutter" | "margin", min: number) => (out[k] !== undefined ? (this.number(item.line, k, out[k], min) ?? d[k]) : d[k]);
       if (out.min === undefined && !(item.name in BREAKPOINT_DEFAULTS)) this.issues.error(item.line, `breakpoint ${item.name} needs min=, the narrowest width it applies to`);
-      layout.breakpoints.push({ name: item.name, min: n("min", 0), columns: n("columns", 1), gutter: n("gutter", 0), margin: n("margin", 0) });
+      layout.breakpoints.push({ name: item.name, min: n("min", 0), columns: n("columns", 1), gutter: n("gutter", 0), margin: n("margin", 0), about: out.about });
     }
     if (!layout.breakpoints.length) layout.breakpoints = Object.entries(BREAKPOINT_DEFAULTS).map(([name, v]) => ({ name, ...v }));
     layout.breakpoints.forEach((b, i) => {
@@ -1218,8 +1227,7 @@ class Checker {
       for (const v of c.variants.filter((x) => x.line)) {
         const props = { ...c.props, ...v.props };
         const fill = props.fill && props.fill !== "none" ? props.fill : "background";
-        const fillRole = fill.split("/")[0];
-        const text = props.text ?? (FILL_ROLES.includes(fillRole) ? `on-${fillRole}` : "text");
+        const text = labelColor(props);
         if (this.colors.get(fill.split("/")[0])?.kind === "gradient") continue;
         // The same two roles as a pair checked above: already reported there, so no echo.
         if (this.pairs.some((p) => p.fg === text && p.bg === fill)) continue;
@@ -1230,6 +1238,38 @@ class Checker {
           const ratio = contrast(fg, over(bg, this.roleColor("background", m, 0) ?? bg));
           if (ratio < need) {
             this.issues.error(v.line!, `${c.name} ${v.name}: ${text} on ${fill === "background" ? "the background" : fill} is ${fmt1(ratio)}:1${this.modeWords(m)}; ${level} needs ${need}${ruleWhere}`);
+            break;
+          }
+        }
+      }
+    }
+    this.checkStateOverrides(need, level, ruleWhere);
+  }
+
+  /** A component's state lines that change fill or text: each variant's label must still read on the new fill. */
+  private checkStateOverrides(need: number, level: string, ruleWhere: string) {
+    for (const c of this.style.components.filter((x) => x.from === "written")) {
+      for (const st of c.states.filter((x) => x.props.fill !== undefined || x.props.text !== undefined)) {
+        for (const m of this.modes) {
+          const failing: string[] = [];
+          let fillShown = "";
+          for (const v of c.variants) {
+            const own = { ...c.props, ...v.props };
+            const fill = st.props.fill ?? (own.fill && own.fill !== "none" ? own.fill : "background");
+            if (this.colors.get(fill.split("/")[0])?.kind === "gradient") continue;
+            const text = labelColor(own, st.props);
+            const bg = this.quietColor(fill, m);
+            const fg = this.quietColor(text, m);
+            if (!bg || !fg) continue;
+            const ratio = contrast(fg, over(bg, this.roleColor("background", m, 0) ?? bg));
+            if (ratio < need) failing.push(`${v.name}'s ${text} is ${fmt1(ratio)}:1`);
+            fillShown = fill;
+          }
+          if (failing.length) {
+            this.issues.error(
+              st.line,
+              `${c.name} ${st.name}: on ${fillShown}${this.modeWords(m)}, ${failing.join(", ")}; ${level} needs ${need}${ruleWhere}. A state line applies to every variant; add text= to it, or give the variants their own colors`,
+            );
             break;
           }
         }
@@ -1295,6 +1335,14 @@ class Checker {
   get pairList() {
     return this.pairs;
   }
+}
+
+/** A component's label color: written text=, else the on- partner of its fill role, else text. A state's text= wins. */
+export function labelColor(own: Record<string, string>, state: Record<string, string> = {}): string {
+  if (state.text) return state.text;
+  if (own.text) return own.text;
+  const fillRole = own.fill && own.fill !== "none" ? own.fill.split("/")[0] : undefined;
+  return fillRole && FILL_ROLES.includes(fillRole) ? `on-${fillRole}` : "text";
 }
 
 const fmt1 = (n: number) => (Math.floor(n * 10) / 10).toFixed(1);

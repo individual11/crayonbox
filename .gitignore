@@ -13,5 +13,8 @@
 !/tsconfig.json
 
 !/src/**/*.ts
+!/scripts/*.ts
 !/test/*.ts
 !/examples/*.crayon
+!/examples/*.png
+!/test/fixtures/*.crayon

@@ -64,6 +64,20 @@ export const RESERVED = new Set<string>(["style", "variant", "size", "ease", "no
 
 export const KNOWN_ROLES = ["background", "surface", "text", "muted", "line", "primary", "secondary", "danger", "success", "warning"] as const;
 
+/** What each known role colors, for the guide. */
+export const ROLE_ABOUT: Record<string, string> = {
+  background: "The page, behind everything",
+  surface: "Cards, sheets, menus",
+  text: "Main text and icons",
+  muted: "Captions, placeholders, timestamps",
+  line: "Borders and dividers",
+  primary: "Tap this; this is selected",
+  secondary: "A second highlight",
+  danger: "Errors",
+  success: "Confirmations",
+  warning: "Cautions",
+};
+
 /** Roles that are filled with color and get an automatic `on-` partner for labels on top. */
 export const FILL_ROLES = ["primary", "secondary", "danger", "success", "warning"];
 

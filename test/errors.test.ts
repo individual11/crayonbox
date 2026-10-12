@@ -203,6 +203,13 @@ test("a variant's own colors are checked, without echoing a role pair", () => {
   );
 });
 
+test("a state line that changes fill is checked against every variant's label", () => {
+  assert.equal(
+    only(style("palette", "  sky #1F6FB2 ramp", "component button", "  variant filled fill=primary", "  variant plain text=sky-600", "  state hover fill=sky-900")),
+    "line 7: button hover: on sky-900, plain's sky-600 is 2.4:1; AA needs 4.5. A state line applies to every variant; add text= to it, or give the variants their own colors",
+  );
+});
+
 // Rules
 test("an unknown rule points at do lines", () => {
   assert.equal(

@@ -25,6 +25,7 @@ component button height=44 radius=md
 
 ```bash
 npm run check -- examples/field-notes.crayon
+npm run render -- examples/field-notes.crayon -o guide.png
 ```
 
 ```text
@@ -36,6 +37,8 @@ auto     on-primary, on-danger, on-success, on-warning · type h1–h3, caption,
 default  roles success, warning · border · opacity · levels raised, floating, modal · easings · layout · icons · focus ring · 7 components
 ```
 
-Status: early. The parser, checker and formatter work (milestone 1); the SVG style guide and the exports (CSS, Tailwind, DTCG `tokens.json`, DESIGN.md, SwiftUI, Compose) are next. The spec is the crayonbox language guide (draft v0.1).
+`render` draws the whole guide as one SVG (or PNG): palette and roles in every mode with their contrast, type specimens in the style's own fonts, grids, spacing, elevation, shape, motion curves, icons, and every component in every state. See [examples/field-notes.png](examples/field-notes.png).
+
+Status: early. The parser, checker, formatter and SVG guide work (milestones 1 and 2); the exports (CSS, Tailwind, DTCG `tokens.json`, DESIGN.md, SwiftUI, Compose) are next. The spec is the crayonbox language guide (draft v0.1).
 
 Requires Node 20 or newer. MIT license.

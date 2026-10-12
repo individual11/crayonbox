@@ -35,6 +35,7 @@ npx tsc                                       # typecheck (no emit)
 npm test                                      # node:test via tsx
 npm run check -- examples/field-notes.crayon    # problems by line, or the summary
 npm run fmt -- file.crayon [-w]                 # tidy (keeps comments)
+npm run render -- examples/field-notes.crayon -o /tmp/guide.png   # the SVG guide (PNG by extension); --platform ios, --no-fetch
 ```
 
 ## Code map
@@ -43,11 +44,19 @@ npm run fmt -- file.crayon [-w]                 # tidy (keeps comments)
 - `src/color.ts`: color parsing (hex, rgb, hsl, oklch), sRGB ↔ OKLab, ramps (`rampAround`, `rampBetween`), WCAG 2 contrast. No dependencies.
 - `src/parse.ts`: tokenizer (parentheses group, so `oklch(55% 0.1 145)` is one word) and text → `StyleFile` (blocks, items, children, guidance, per-line roles for fmt). Line-local checks only.
 - `src/check.ts`: the `Checker` resolves every family into `Style` with provenance (written / auto / default), resolves colors per mode lazily with cycle detection, runs contrast and rules, and builds the `Summary`.
+- `src/render.ts`: the SVG guide. Builds plain `{ type, props }` elements (no React) section by section from `Style`, and Satori lays them out and outlines the text. `Paint` resolves color expressions per mode (and gradients to CSS). The guide's own labels are neutral (Inter, grays) so only the specimens carry the style (a themed option is on the roadmap). Guidance is drawn where it was written: a family's lines under that family's heading (`family()`), a component's lines beside its row (in the first mode's panel only), `about=` under the item's name; `SECTION_LEVEL` lists the families whose lines belong to the whole section. Exported as `crayonbox/render` so the main import stays dependency-free.
+- `src/fonts.ts`: Inter from `@fontsource/inter` for labels and stand-ins; the style's fonts fetched from Google Fonts by name (a plain request returns TTF; Satori can't read WOFF2) and cached in `~/.cache/crayonbox/fonts`. A font that can't be fetched is drawn in Inter and labeled.
 - `src/fmt.ts`: canonical order, two-space levels, comments travel with the line below, inner spacing kept.
 - `src/issues.ts`, `src/suggest.ts`: copied from beatsheet.
-- `test/`: `language.test.ts` (example, summary, derivations), `errors.test.ts` (every message with its line), `color.test.ts`, `fmt.test.ts`.
+- `test/`: `language.test.ts` (example, summary, derivations), `errors.test.ts` (every message with its line), `color.test.ts`, `fmt.test.ts`, `render.test.ts` (offline: `fetch: false`). `test/fixtures/everything.crayon` uses every family and option; render it after renderer changes.
 
 ## Gotchas
+
+- **Verify renderer changes by looking at the PNG**, slice by slice, for the example and `test/fixtures/everything.crayon`. The tests only prove it renders. Rendering the stress fixture found two renderer bugs and a checker gap (state overrides), none of which the tests caught.
+- **Satori crashes on an undefined style value**; `box`/`text` strip them (`tidy`). Every element with more than one child needs `display: flex` (the helpers set it).
+- **resvg panics (Rust `unwrap` on `None`) without an explicit `fitTo`**, and on SVGs cropped by viewBox. Always pass `fitTo: { mode: "zoom", value }`; to look at a tall board in pieces, `npm run slices -- guide.svg /tmp/s` renders it once and cuts the pixels.
+- **Lucide icons are looked up by PascalCase** (`Check`, not `check`); an unknown name draws nothing.
+- **Pinned exactly:** satori, lucide, @fontsource/inter. A font or layout change moves every render.
 
 - **The first word decides a line, in context.** Section keywords are reserved; inside an item section any other word is an item name. `state` is ambiguous: `state hover=8` is the section, `state disabled opacity=0.3` (a bare word next) under a component is a child.
 - **No cascades.** Lines under an unknown section are skipped; a role that failed to resolve is in `failed` and skipped by contrast; component variants that repeat a core role pair aren't re-reported. Keep it that way: echoes cost the model a repair round.
@@ -58,4 +67,4 @@ npm run fmt -- file.crayon [-w]                 # tidy (keeps comments)
 
 ## Next
 
-Milestone 2: the SVG style guide (`crayonbox render`), one tall board in the guide's order, drawn from `Style`. Open rendering questions are in `ROADMAP.md` (do/don't layout, licensed fonts).
+Milestone 3: exports (`crayonbox build --to css,tailwind,dtcg,design.md,swift,compose`). Rendering follow-ups (icon sets, blur, licensed fonts) are in `ROADMAP.md`.

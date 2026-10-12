@@ -1,0 +1,87 @@
+style "Everything" modes=light,dark
+  about "Every family, every option: a test of the renderer."
+  do "Keep it busy."
+
+palette
+  sky  oklch(62% 0.16 245) ramp
+  sand #E9DFC9
+  tea  rgb(40, 110, 90)
+
+color
+  background #FAFAF7    dark=#101214
+  surface    #FFFFFF    dark=#1A1D21
+  text       #15171A    dark=#ECEEF0
+  muted      #5C6370    dark=#9AA3AE
+  line       #D5D9DF    dark=#2E333A
+  primary    sky-700    dark=sky-300
+  secondary  tea        dark=#7FD1B9
+  brand      sand       about="An extra role"
+
+gradient
+  dawn linear 120 primary,secondary
+  glow radial primary/40,surface
+
+font
+  sans "Inter" fallback=system-ui
+  mono "JetBrains Mono" fallback=monospace
+  hand "Not A Real Font Family" fallback=cursive
+
+type font=sans ratio=1.2
+  body 15
+  h1 weight=700
+  h4 16
+  label weight=600
+  quote font=hand italic
+
+layout max=1440 touch=48
+  phone min=0 columns=4 gutter=12 margin=16
+  wide min=1024 columns=12 gutter=24 margin=40
+
+space base=4
+radius sm=4 md=8 lg=16 full
+border hairline=1 thick=3
+opacity disabled=0.35 scrim=0.6 ghost=0.12
+
+material
+  glass blur=24 fill=surface/60 line=text/10
+    dark fill=surface/50
+
+elevation
+  raised fill=surface shadow=0,1,2,#000000/10+0,4,12,#000000/8
+  floating fill=surface shadow=0,8,24,#000000/16
+    dark tint=8 shadow=none line=line
+  modal material=glass shadow=0,24,48,#000000/24
+  overlay fill=surface tint=4 shadow=0,2,6,#000000/12
+
+motion fast=90ms normal=180ms slow=280ms reduced=none
+  ease standard=0.2,0,0,1 bounce=0.34,1.56,0.64,1 linear=linear
+
+icons phosphor stroke=2 sizes=16,24,32 ios=sf-symbols
+
+state hover=6 pressed=10 selected=14
+focus color=secondary width=3 offset=1
+
+component button height=48 pad=0,xl radius=full type=label
+  variant filled   fill=primary
+  variant outlined fill=none text=primary line=primary border=thick
+  variant plain    fill=none text=primary
+  variant fancy    fill=dawn text=#FFFFFF
+  size sm height=36 pad=0,md
+  size lg height=56 pad=0,2xl
+  state hover fill=sky-800 text=#FFFFFF
+  state disabled opacity=ghost
+
+component input height=48 radius=md
+component card elevation=floating radius=lg pad=xl
+component badge
+  variant soft fill=primary/15 text=primary
+component tabs height=48
+component switch height=28
+
+imagery
+  about "Photos of real places, never stock."
+  dont "Illustrations with faces."
+
+rule contrast=AA
+rule min-text=12
+rule touch=48
